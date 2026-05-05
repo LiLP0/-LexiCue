@@ -5,11 +5,15 @@ import { PageShell } from '../components/PageShell';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useScriptStorage } from '../hooks/useScriptStorage';
 
+const CLOUD_SYNC_BETA_NOTE =
+  'For the safest experience, sign in with Google and keep Cloud Sync turned on so your scripts save to your own Google Drive. Local save still works on this device, but Cloud Sync is the best way to keep your work available across sessions and devices.';
+
 export function HomePage() {
   usePageTitle('Home');
   const navigate = useNavigate();
   const { libraryLoadError, projects } = useScriptStorage();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isBetaNoteOpen, setIsBetaNoteOpen] = useState(true);
 
   function handleCreateNewScript(): void {
     setStatusMessage(null);
@@ -39,6 +43,30 @@ export function HomePage() {
       title="LexiCue Studio"
       variant="hero"
     >
+      {isBetaNoteOpen ? (
+        <section className="home-beta-popup" aria-label="Cloud Sync beta note">
+          <div className="home-beta-popup-copy">
+            <div className="home-beta-popup-heading">
+              <span className="home-beta-popup-icon" aria-hidden="true">
+                !
+              </span>
+              <p className="home-beta-popup-label">Beta note</p>
+            </div>
+            <p className="page-note home-beta-popup-note">
+              {CLOUD_SYNC_BETA_NOTE}
+            </p>
+          </div>
+          <button
+            aria-label="Dismiss beta note"
+            className="text-link home-beta-popup-close"
+            onClick={() => setIsBetaNoteOpen(false)}
+            type="button"
+          >
+            Dismiss
+          </button>
+        </section>
+      ) : null}
+
       <div className="panel-grid">
         <section className="panel panel-half">
           <h2>Start a project</h2>
