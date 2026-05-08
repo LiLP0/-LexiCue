@@ -4,18 +4,6 @@ import type {
 } from '../types/script';
 
 const DEFAULT_EMPHASIS_COLOR = '#86cf97';
-const DEFAULT_FUNCTION_WORDS = new Set([
-  'the',
-  'and',
-  'or',
-  'to',
-  'of',
-  'in',
-  'a',
-  'an',
-  'is',
-  'it',
-]);
 
 const WORD_OR_NUMBER_OR_OTHER_REGEX =
   /(\p{L}+(?:['’-]\p{L}+)*)|(\p{N}+(?:[:.,/-]\p{N}+)*)|([^\p{L}\p{N}]+)/gu;
@@ -51,7 +39,6 @@ export const DEFAULT_SCRIPT_FOCUS_MODE_SETTINGS: ScriptFocusModeSettings = {
   emphasisColor: DEFAULT_EMPHASIS_COLOR,
   underlineStyle: 'solid',
   underlineThickness: 1,
-  ignoreShortFunctionWords: true,
   applyToNumbers: false,
 };
 
@@ -125,12 +112,6 @@ function countTokenLength(token: string, tokenType: 'number' | 'word'): number {
       length + (isTokenCharacter(character, tokenType) ? 1 : 0),
     0,
   );
-}
-
-function isAllWordsEligibilityMode(
-  settings: ScriptFocusModeSettings,
-): boolean {
-  return settings.minimumWordLength <= 1;
 }
 
 function migrateLettersEmphasizedFromLegacyPercentage(
@@ -293,26 +274,6 @@ function normalizeAnchorSplit(
   );
 }
 
-function isIgnoredFunctionWord(
-  token: string,
-  settings: ScriptFocusModeSettings,
-): boolean {
-  if (isAllWordsEligibilityMode(settings)) {
-    return false;
-  }
-
-  if (!settings.ignoreShortFunctionWords) {
-    return false;
-  }
-
-  const normalizedWord = Array.from(token)
-    .filter((character) => LETTER_CHARACTER_REGEX.test(character))
-    .join('')
-    .toLowerCase();
-
-  return DEFAULT_FUNCTION_WORDS.has(normalizedWord);
-}
-
 export function normalizeScriptFocusModeSettings(
   value: Partial<ScriptFocusModeSettings> | unknown,
 ): ScriptFocusModeSettings {
@@ -360,10 +321,6 @@ export function normalizeScriptFocusModeSettings(
       DEFAULT_SCRIPT_FOCUS_MODE_SETTINGS.underlineThickness,
       1,
       6,
-    ),
-    ignoreShortFunctionWords: normalizeBoolean(
-      settings.ignoreShortFunctionWords,
-      DEFAULT_SCRIPT_FOCUS_MODE_SETTINGS.ignoreShortFunctionWords,
     ),
     applyToNumbers: normalizeBoolean(
       settings.applyToNumbers,
@@ -414,14 +371,9 @@ export function getScriptFocusRenderableSegments(
     const token = wordToken ?? numberToken ?? '';
     const tokenType = wordToken ? 'word' : 'number';
     const tokenLength = countTokenLength(token, tokenType);
-    const minimumEligibleLength =
-      tokenType === 'word' && isAllWordsEligibilityMode(settings)
-        ? 1
-        : settings.minimumWordLength;
     const canEmphasize =
-      tokenLength >= minimumEligibleLength &&
-      (tokenType === 'word' || settings.applyToNumbers) &&
-      (tokenType !== 'word' || !isIgnoredFunctionWord(token, settings));
+      tokenLength >= settings.minimumWordLength &&
+      (tokenType === 'word' || settings.applyToNumbers);
 
     if (!canEmphasize) {
       segments.push({

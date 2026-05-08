@@ -33,7 +33,6 @@ const MAX_CHUNK_FONT_SIZE = 80;
 const MIN_CHUNK_FONT_SIZE = 26;
 const FONT_SIZE_STEP = 2;
 const TIMER_INTERVAL_MS = 1000;
-const SCRIPT_FOCUS_FUNCTION_WORD_HINT = 'the, and, or, to, of, in, a, an, is, it';
 
 function getPlaybackChunks(project: ScriptProject | null): PlaybackChunk[] {
   if (!project) {
@@ -127,6 +126,8 @@ function getMinimumWordLengthMode(value: number): string {
   switch (value) {
     case 1:
       return 'all';
+    case 3:
+      return 'gt2';
     case 4:
       return 'gt3';
     case 5:
@@ -188,8 +189,6 @@ export function PerformancePage() {
         emphasisStyle: scriptFocusModeSettings.emphasisStyle,
         lettersEmphasized: scriptFocusModeSettings.lettersEmphasized,
         frequency: scriptFocusModeSettings.frequency,
-        ignoreShortFunctionWords:
-          scriptFocusModeSettings.ignoreShortFunctionWords,
         minimumWordLength: scriptFocusModeSettings.minimumWordLength,
         underlineStyle: scriptFocusModeSettings.underlineStyle,
         underlineThickness: scriptFocusModeSettings.underlineThickness,
@@ -202,9 +201,6 @@ export function PerformancePage() {
   const scriptFocusPreviewText = getScriptFocusPreviewText(
     currentPlaybackChunk?.chunk.text ?? project?.rawScript ?? '',
   );
-  const isAllWordsEligibilityMode =
-    getMinimumWordLengthMode(scriptFocusModeSettings.minimumWordLength) ===
-    'all';
   const isCustomLettersEmphasizedMode =
     getLettersEmphasizedMode(scriptFocusModeSettings.lettersEmphasized) ===
     'custom';
@@ -459,7 +455,9 @@ export function PerformancePage() {
     const nextMinimumWordLength =
       nextValue === 'all'
         ? 1
-        : nextValue === 'gt3'
+        : nextValue === 'gt2'
+          ? 3
+          : nextValue === 'gt3'
           ? 4
           : nextValue === 'gt4'
             ? 5
@@ -860,25 +858,6 @@ export function PerformancePage() {
 
               <label className="script-focus-toggle">
                 <input
-                  checked={scriptFocusModeSettings.ignoreShortFunctionWords}
-                  disabled={isAllWordsEligibilityMode}
-                  onChange={(event) =>
-                    updateScriptFocusSettings({
-                      ignoreShortFunctionWords: event.target.checked,
-                    })
-                  }
-                  title={
-                    isAllWordsEligibilityMode
-                      ? 'All words always includes short function words.'
-                      : undefined
-                  }
-                  type="checkbox"
-                />
-                <span>Ignore short function words</span>
-              </label>
-
-              <label className="script-focus-toggle">
-                <input
                   checked={scriptFocusModeSettings.applyToNumbers}
                   onChange={(event) =>
                     updateScriptFocusSettings({
@@ -890,13 +869,6 @@ export function PerformancePage() {
                 <span>Apply to numbers</span>
               </label>
             </div>
-
-            {isAllWordsEligibilityMode ? (
-              <p className="page-note">
-                All words includes short function words and turns off
-                minimum-length filtering.
-              </p>
-            ) : null}
 
             <div className="script-focus-grid">
               <div className="field-group">
@@ -969,6 +941,7 @@ export function PerformancePage() {
                   )}
                 >
                   <option value="all">All words</option>
+                  <option value="gt2">Words longer than 2 letters</option>
                   <option value="gt3">Words longer than 3 letters</option>
                   <option value="gt4">Words longer than 4 letters</option>
                   <option value="gt5">Words longer than 5 letters</option>
@@ -1143,10 +1116,6 @@ export function PerformancePage() {
                 />
               </div>
             </div>
-
-            <p className="script-focus-function-word-hint">
-              Default function words: {SCRIPT_FOCUS_FUNCTION_WORD_HINT}
-            </p>
 
             <div className="script-focus-preview">
               <p className="script-focus-preview-label">Current chunk preview</p>

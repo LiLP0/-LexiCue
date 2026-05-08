@@ -93,6 +93,5 @@ export interface ScriptFocusModeSettings {
   emphasisColor: string;
   underlineStyle: ScriptFocusUnderlineStyle;
   underlineThickness: number;
-  ignoreShortFunctionWords: boolean;
   applyToNumbers: boolean;
 }
